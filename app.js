@@ -3,41 +3,25 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
+const {MONGODB_URI, PORT} = require('./utils/config')
+const Router = require('./controllers/blogs')
+const logger = require('./utils/logger')
 
-const blogSchema = mongoose.Schema({
-  title: String,
-  author: String,
-  url: String,
-  likes: Number
-})
+// node throws an error if line starts with ( 
+;(async () => {
+  try {
+    mongoose.connect(MONGODB_URI)
+    logger.info('connected to mongoDB')
+  } catch(e) {
+    logger.error('error connecting to mongoDB: ', e.message)
+  }
+})()
 
-const Blog = mongoose.model('Blog', blogSchema)
 
-const mongoUrl = 'mongodb+srv://keijop:Im101328@nodeexpressproject.yttuu.mongodb.net/bloglist?retryWrites=true&w=majority'
-mongoose.connect(mongoUrl)
 
 app.use(cors())
 app.use(express.json())
+app.use('/api/blogs', Router)
 
-app.get('/api/blogs', (request, response) => {
-  Blog
-    .find({})
-    .then(blogs => {
-      response.json(blogs)
-    })
-})
 
-app.post('/api/blogs', (request, response) => {
-  const blog = new Blog(request.body)
-
-  blog
-    .save()
-    .then(result => {
-      response.status(201).json(result)
-    })
-})
-
-const PORT = 3003
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+module.exports = app
