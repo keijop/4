@@ -1,13 +1,12 @@
-const http = require('http')
 const express = require('express')
 const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
-const {MONGODB_URI, PORT} = require('./utils/config')
+const { MONGODB_URI } = require('./utils/config')
 const Router = require('./controllers/blogs')
 const logger = require('./utils/logger')
 
-// node throws an error if line starts with ( 
+// node throws an error if line starts with (
 ;(async () => {
   try {
     mongoose.connect(MONGODB_URI)
@@ -16,7 +15,6 @@ const logger = require('./utils/logger')
     logger.error('error connecting to mongoDB: ', e.message)
   }
 })()
-
 
 
 app.use(cors())

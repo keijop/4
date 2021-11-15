@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --verbose",
     "devstart": "nodemon index.js"
   },
   "author": "keijo prunt",
@@ -16,6 +16,11 @@
   },
   "devDependencies": {
     "dotenv": "^10.0.0",
+    "eslint": "^8.2.0",
+    "jest": "^27.3.1",
     "nodemon": "^2.0.15"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
