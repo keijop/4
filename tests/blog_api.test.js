@@ -3,20 +3,16 @@ const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
 
-//console.log(mongoose.connection.readyState)
-
 const api = supertest(app)
 
 const initialBlogs = [
   {
-    _id: '5a422a851b54a676234d17f7',
     title: 'React patterns',
     author: 'Michael Chan',
     url: 'https://reactpatterns.com/',
     likes: 7
   },
   {
-    _id: '5a422aa71b54a676234d17f8',
     title: 'Go To Statement Considered Harmful',
     author: 'Edsger W. Dijkstra',
     url: 'http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html',
@@ -24,7 +20,6 @@ const initialBlogs = [
   }]
 
 const oneBlog =  {
-  _id: '5a422b3a1b54a676234d17f9',
   title: 'Canonical string reduction',
   author: 'Edsger W. Dijkstra',
   url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
@@ -32,11 +27,11 @@ const oneBlog =  {
 }
 
 const blogWithoutLikes = {
-  _id: '5a422ba71b54a676234d17fb',
   title: 'TDD harms architecture',
   author: 'Robert C. Martin',
   url: 'http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html',
 }
+const token = 'bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkthbGV2IiwiaWQiOiI2MTk2YWI5M2IwZDkxM2JlNWNhMmMxZDgiLCJpYXQiOjE2MzcyNjQzNTh9.Nn1mVPUtCuhLHcWSg6-KbAX9JRowb36J_Fkm6HqA7bI'
 
 beforeEach( async () => {
   await Blog.deleteMany({})
@@ -44,6 +39,13 @@ beforeEach( async () => {
 })
 
 describe('bloglist', () => {
+
+  test('post request without valid token responds 401', async () => {
+    const response = await api
+      .post('/api/blogs')
+      .send(oneBlog)
+    expect(response.statusCode).toBe(401)
+  })
 
   test('all blogs are returned and as json', async () => {
     const response = await api.get('/api/blogs')
@@ -56,10 +58,11 @@ describe('bloglist', () => {
     expect(response.body[0].id).toBeDefined()
   })
 
-  test('post blog returns add blog to db and return added blog ', async () => {
+  test('post blog returns add blog to db and return added blog', async () => {
     const postResponse = await api
       .post('/api/blogs')
       .send(oneBlog)
+      .set({ 'Authorization' : token })
     const getResponse = await api.get('/api/blogs')
     expect(getResponse.body).toHaveLength(initialBlogs.length + 1)
     expect(postResponse.body.title).toBe('Canonical string reduction')
@@ -69,6 +72,7 @@ describe('bloglist', () => {
     const response = await api
       .post('/api/blogs')
       .send(blogWithoutLikes)
+      .set({ 'Authorization' : token })
     expect(response.body.likes).toBe(0)
   })
 
@@ -83,25 +87,40 @@ describe('bloglist', () => {
       const response = await api
         .post('/api/blogs')
         .send(blog)
+        .set({ 'Authorization' : token })
       expect(response.statusCode).toBe(400)
-
     }
   })
 
   test('delete single post returns deleted post and removes from db', async () => {
-    const id = '5a422a851b54a676234d17f7'
-    const deleteResponse = await api.delete('/api/blogs/'+id)
+
+    const blogToRemove = await api
+      .post('/api/blogs')
+      .send(oneBlog)
+      .set({ 'Authorization' : token })
+
+    const id = blogToRemove.body.id
+    const deleteResponse = await api
+      .delete('/api/blogs/'+id)
+      .set({ 'Authorization' : token })
+
     const getResponse = await api.get('/api/blogs')
     expect(deleteResponse.body.id).toBe(id)
-    expect(getResponse.body).toHaveLength(initialBlogs.length - 1)
+    expect(getResponse.body).toHaveLength(initialBlogs.length)
   })
 
   test('update single blog returns updated blog from db', async () => {
-    const id = '5a422a851b54a676234d17f7'
-    const response = await api
+
+    const blogToUpdate = await api
+      .post('/api/blogs')
+      .send(oneBlog)
+      .set({ 'Authorization' : token })
+
+    const id = blogToUpdate.body.id
+    const updateResponse = await api
       .patch('/api/blogs/'+id)
       .send({ likes : 99 }, { new :true })
-    expect(response.body.likes).toBe(99)
+    expect(updateResponse.body.likes).toBe(99)
 
   })
 
@@ -111,9 +130,7 @@ describe('bloglist', () => {
 
 
 afterAll( async () => {
-  //console.log(mongoose.connection.readyState)
   await mongoose.connection.close()
-  //console.log(mongoose.connection.readyState)
 })
 
 
