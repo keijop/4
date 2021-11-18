@@ -11,6 +11,7 @@ blogsRouter.route('/')
     res.json(bloglist)
   })
   .post( userExtractor, async (req, res) => {
+
     const user = req.user
     const body = req.body
     body.user = user.id
