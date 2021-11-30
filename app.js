@@ -7,14 +7,18 @@ const blogsRouter = require('./controllers/blogs')
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
 const logger = require('./utils/logger')
-const { errorHandler, notFoundEndpoint, requestLogger } = require('./utils/middleware')
+const {
+  errorHandler,
+  notFoundEndpoint,
+  requestLogger,
+} = require('./utils/middleware')
 
 //node throws an error if line starts with (
 ;(async () => {
   try {
     await mongoose.connect(MONGODB_URI)
     logger.info('connected to mongoDB')
-  } catch(e) {
+  } catch (e) {
     logger.error('error connecting to mongoDB: ', e.message)
   }
 })()
@@ -25,6 +29,11 @@ app.use(requestLogger)
 app.use('/api/blogs', blogsRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
+
+if (process.env.NODE_ENV === 'test') {
+  const resetRouter = require('./controllers/reset')
+  app.use('/api/testing', resetRouter)
+}
 
 app.use(notFoundEndpoint)
 app.use(errorHandler)
