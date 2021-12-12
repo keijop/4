@@ -9,7 +9,7 @@ loginRouter.route('/').post(async (req, res) => {
   const { password, username } = req.body
   console.log('trying to log in....')
   console.log(password, username)
-  console.log(`------`)
+  console.log('------')
   if (!password || !username)
     return res.status(400).json({ error: 'Missing credentials' })
   const user = await User.findOne({ username: username })

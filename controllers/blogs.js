@@ -1,5 +1,6 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
+const Comment = require('../models/comment')
 const { userExtractor } = require('../utils/middleware')
 require('express-async-errors')
 
@@ -54,6 +55,20 @@ blogsRouter
       { new: true }
     )
     res.status(200).json(updatedBlog)
+  })
+
+blogsRouter
+  .route('/:id/comments')
+  .get(async (req, res) => {
+    const blogId = req.params.id
+    const comments = await Comment.find({ blogId })
+    res.status(200).json({ comments })
+  })
+  .post(async (req, res) => {
+    const blogId = req.params.id
+    const { content } = req.body
+    const comment = await Comment.create({ blogId, content })
+    res.status(200).json({ comment })
   })
 
 module.exports = blogsRouter
